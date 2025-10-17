@@ -530,7 +530,7 @@ const SkillsSection = () => (
 );
 
 const ContactSection = () => {
-  const FORMSPREE_ID = 'VITE_FORMSPREE_ID'; // Replace with your Formspree form ID
+  const FORMSPREE_ID = import.meta.env.VITE_FORMSPREE_ID; // Replace with your Formspree form ID
   const [status, setStatus] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState('');
