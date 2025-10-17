@@ -1,16 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   BrowserRouter,
   Routes,
   Route,
   Link,
   useParams,
-  NavLink,
-  Outlet,
 } from 'react-router-dom';
-// NEW: Import the new CSS file
+import profilePic from './assets/profile.jpg';
 import './App.css';
-
 // --- DATA (No changes here) ---
 const projectData = [
   {
@@ -31,7 +28,7 @@ const projectData = [
       'Implemented a critical safety feature to track cloud-to-cloud and cloud-to-ground lightning within a specific radius of a wind farm.',
     ],
     liveUrl: 'https://tarla.io', // Placeholder
-    sourceUrl: 'https://github.com/your-username/tarla-io-repo', // Placeholder
+    sourceUrl: 'https://github.com/isaakhann/MapboxProject', // Placeholder
     isFeatured: true,
   },
   {
@@ -51,7 +48,7 @@ const projectData = [
       'The key feature is a "smart scheduling system" I implemented that prioritizes requests based on historical student data from different high schools.',
     ],
     liveUrl: '#',
-    sourceUrl: 'https://github.com/your-username/bilformation-repo', // Placeholder
+    sourceUrl: 'https://github.com/CS319-24-FA/S3-T6-Bilformationn', // Placeholder
     isFeatured: true,
   },
   {
@@ -71,7 +68,7 @@ const projectData = [
       'Developed features to render the ECG waveforms accurately on screen and assist in generating diagnoses based on the output.',
     ],
     liveUrl: null,
-    sourceUrl: 'https://github.com/your-username/kardinero-repo', // Placeholder
+    sourceUrl: 'https://github.com/isaakhann/Kardinero_App', // Placeholder
     isFeatured: true,
   },
   {
@@ -138,9 +135,9 @@ const skillsData = {
 };
 
 const GITHUB_URL = 'https://github.com/isaakhann';
-const LINKEDIN_URL = 'https://linkedin.com/in/isakhan1123';
+const LINKEDIN_URL = 'https://linkedin.com/in/isa-khan1123';
 
-// --- SVG ICONS (No changes here) ---
+// --- SVG ICONS (Updated for a more modern look) ---
 const GithubIcon = ({ className }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -154,10 +151,10 @@ const GithubIcon = ({ className }) => (
     strokeLinejoin="round"
     className={className}
   >
-    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+    <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
+    <path d="M9 18c-4.51 2-5-2-7-3"></path>
   </svg>
 );
-
 const LinkedinIcon = ({ className }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -176,7 +173,6 @@ const LinkedinIcon = ({ className }) => (
     <circle cx="4" cy="4" r="2"></circle>
   </svg>
 );
-
 const ExternalLinkIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -195,191 +191,190 @@ const ExternalLinkIcon = () => (
   </svg>
 );
 
-// --- HELPER COMPONENTS (No changes here) ---
-const AnimatedSection = ({ children, className = '' }) => {
-  return (
-    <section className={`animated-section ${className}`}>{children}</section>
-  );
-};
-
+// --- HELPER COMPONENTS ---
 const ScrollToTop = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
   return null;
 };
 
-// --- LAYOUT COMPONENTS ---
+// NEW: Scroll Progress Bar Component
+const ScrollProgressBar = () => {
+  const [scrollProgress, setScrollProgress] = useState(0);
 
-const Navbar = () => {
+  const handleScroll = () => {
+    const totalHeight =
+      document.documentElement.scrollHeight -
+      document.documentElement.clientHeight;
+    const progress = (window.scrollY / totalHeight) * 100;
+    setScrollProgress(progress);
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div className="scroll-progress-bar-container">
+      <div
+        className="scroll-progress-bar"
+        style={{ width: `${scrollProgress}%` }}
+      ></div>
+    </div>
+  );
+};
+
+// --- LAYOUT COMPONENTS ---
+const Navbar = ({ isSinglePage }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
+  const sectionsRef = useRef({});
+
+  useEffect(() => {
+    if (!isSinglePage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: '-30% 0px -70% 0px' }
+    );
+
+    const sections = document.querySelectorAll('.page-section');
+    sections.forEach((section) => {
+      sectionsRef.current[section.id] = section;
+      observer.observe(section);
+    });
+
+    return () => {
+      Object.values(sectionsRef.current).forEach((section) => {
+        if (section) observer.unobserve(section);
+      });
+    };
+  }, [isSinglePage]);
+
+  const navLinks = [
+    { id: 'home', title: 'Home' },
+    { id: 'about', title: 'About' },
+    { id: 'projects', title: 'Projects' },
+    { id: 'skills', title: 'Skills' },
+    { id: 'contact', title: 'Contact' },
+  ];
+
+  const NavItem = ({ id, title, isMobile = false }) => {
+    const className = isMobile ? 'nav-link-mobile' : 'nav-link';
+    const activeClassName = activeSection === id ? ' active' : '';
+
+    return (
+      <a
+        href={`#${id}`}
+        className={className + activeClassName}
+        onClick={() => isMobile && setIsOpen(false)}
+      >
+        {title}
+      </a>
+    );
+  };
 
   return (
     <nav className="navbar">
       <div className="navbar-container">
-        <div className="navbar-brand">
-          <Link to="/" className="navbar-logo">
-            Isa Ahmad Khan
-          </Link>
-        </div>
-        <div className="navbar-menu-desktop">
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              isActive ? 'nav-link active' : 'nav-link'
-            }
-          >
-            Home
-          </NavLink>
-          <NavLink
-            to="/about"
-            className={({ isActive }) =>
-              isActive ? 'nav-link active' : 'nav-link'
-            }
-          >
-            About
-          </NavLink>
-          <NavLink
-            to="/projects"
-            className={({ isActive }) =>
-              isActive ? 'nav-link active' : 'nav-link'
-            }
-          >
-            Projects
-          </NavLink>
-          <NavLink
-            to="/skills"
-            className={({ isActive }) =>
-              isActive ? 'nav-link active' : 'nav-link'
-            }
-          >
-            Skills
-          </NavLink>
-          <NavLink
-            to="/contact"
-            className={({ isActive }) =>
-              isActive ? 'nav-link active' : 'nav-link'
-            }
-          >
-            Contact
-          </NavLink>
-        </div>
-        <div className="navbar-menu-mobile-toggle">
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="mobile-menu-button"
-          >
-            {isOpen ? (
-              <svg
-                className="menu-icon"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            ) : (
-              <svg
-                className="menu-icon"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            )}
-          </button>
-        </div>
-      </div>
-      <div className={`navbar-menu-mobile ${isOpen ? 'open' : ''}`}>
-        <NavLink
+        <Link
           to="/"
-          onClick={() => setIsOpen(false)}
-          className={({ isActive }) =>
-            isActive ? 'nav-link-mobile active' : 'nav-link-mobile'
-          }
+          className="navbar-logo"
+          onClick={() => window.scrollTo(0, 0)}
         >
-          Home
-        </NavLink>
-        <NavLink
-          to="/about"
-          onClick={() => setIsOpen(false)}
-          className={({ isActive }) =>
-            isActive ? 'nav-link-mobile active' : 'nav-link-mobile'
-          }
-        >
-          About
-        </NavLink>
-        <NavLink
-          to="/projects"
-          onClick={() => setIsOpen(false)}
-          className={({ isActive }) =>
-            isActive ? 'nav-link-mobile active' : 'nav-link-mobile'
-          }
-        >
-          Projects
-        </NavLink>
-        <NavLink
-          to="/skills"
-          onClick={() => setIsOpen(false)}
-          className={({ isActive }) =>
-            isActive ? 'nav-link-mobile active' : 'nav-link-mobile'
-          }
-        >
-          Skills
-        </NavLink>
-        <NavLink
-          to="/contact"
-          onClick={() => setIsOpen(false)}
-          className={({ isActive }) =>
-            isActive ? 'nav-link-mobile active' : 'nav-link-mobile'
-          }
-        >
-          Contact
-        </NavLink>
+          Isa Ahmad Khan
+        </Link>
+        {isSinglePage && (
+          <>
+            <div className="navbar-menu-desktop">
+              {navLinks.map((link) => (
+                <NavItem key={link.id} {...link} />
+              ))}
+            </div>
+            <div className="navbar-menu-mobile-toggle">
+              <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="mobile-menu-button"
+                aria-label="Toggle menu"
+              >
+                {isOpen ? (
+                  <svg
+                    className="menu-icon"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="menu-icon"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </>
+        )}
       </div>
+      {isSinglePage && (
+        <div className={`navbar-menu-mobile ${isOpen ? 'open' : ''}`}>
+          {navLinks.map((link) => (
+            <NavItem key={link.id} {...link} isMobile />
+          ))}
+        </div>
+      )}
     </nav>
   );
 };
 
-const ProjectCard = ({ project }) => {
-  return (
-    <div className="project-card">
-      <img
-        className="project-card-image"
-        src={project.imageUrl}
-        alt={project.title}
-      />
-      <div className="project-card-content">
-        <h3 className="project-card-title">{project.title}</h3>
-        <p className="project-card-description">{project.shortDescription}</p>
-        <div className="project-card-tags">
-          {project.tags.map((tag) => (
-            <span key={tag} className="project-card-tag">
-              {tag}
-            </span>
-          ))}
-        </div>
-        <Link to={`/projects/${project.id}`} className="project-card-link">
-          View Case Study <span>&rarr;</span>
-        </Link>
+const ProjectCard = ({ project, index }) => (
+  <div className="project-card" style={{ animationDelay: `${index * 100}ms` }}>
+    <img
+      className="project-card-image"
+      src={project.imageUrl}
+      alt={project.title}
+    />
+    <div className="project-card-content">
+      <h3 className="project-card-title">{project.title}</h3>
+      <p className="project-card-description">{project.shortDescription}</p>
+      <div className="project-card-tags">
+        {project.tags.map((tag) => (
+          <span key={tag} className="project-card-tag">
+            {tag}
+          </span>
+        ))}
       </div>
+      <Link to={`/projects/${project.id}`} className="project-card-link">
+        View Case Study <span>&rarr;</span>
+      </Link>
     </div>
-  );
-};
+  </div>
+);
 
 const Footer = () => (
   <footer className="footer">
@@ -391,33 +386,22 @@ const Footer = () => (
   </footer>
 );
 
-const AppLayout = () => (
-  <div className="app-layout">
-    <div className="background-gradient"></div>
-    <Navbar />
-    <main className="main-content">
-      <Outlet />
-    </main>
-    <Footer />
-  </div>
-);
+// --- PAGE SECTIONS ---
 
-// --- PAGES ---
-
-const Home = () => (
-  <div className="home-hero">
+const HomeSection = () => (
+  <section id="home" className="home-hero page-section">
     <div className="home-hero-content">
       <h1 className="home-hero-title">Isa Ahmad Khan</h1>
       <p className="home-hero-subtitle">
         A Software Engineer building data-driven web and desktop applications.
       </p>
       <div className="home-hero-actions">
-        <Link to="/projects" className="button button-primary">
+        <a href="#projects" className="button button-primary">
           View My Work
-        </Link>
-        <Link to="/contact" className="button button-secondary">
+        </a>
+        <a href="#contact" className="button button-secondary">
           Get In Touch
-        </Link>
+        </a>
       </div>
       <div className="home-hero-socials">
         <a
@@ -425,6 +409,7 @@ const Home = () => (
           target="_blank"
           rel="noopener noreferrer"
           className="social-link"
+          aria-label="GitHub"
         >
           <GithubIcon />
         </a>
@@ -433,32 +418,29 @@ const Home = () => (
           target="_blank"
           rel="noopener noreferrer"
           className="social-link"
+          aria-label="LinkedIn"
         >
           <LinkedinIcon />
         </a>
       </div>
     </div>
-  </div>
+  </section>
 );
 
-const About = () => (
-  <AnimatedSection>
+const AboutSection = () => (
+  <section id="about" className="page-section">
     <div className="page-container">
       <h2 className="page-title">About Me</h2>
       <div className="about-content">
         <div className="about-image-container">
-          <img
-            src="https://placehold.co/400x400/0f172a/94a3b8?text=Isa"
-            alt="Isa Ahmad Khan"
-            className="about-image"
-          />
+          <img src={profilePic} alt="Isa Ahmad Khan" className="about-image" />
         </div>
         <div className="about-text">
           <p>
-            Hello! I'm Isa Ahmad Khan, a Software Engineering student at İhsan
-            Doğramacı Bilkent University in Ankara. I am passionate about
-            leveraging technology to build tangible solutions, from complex data
-            visualization platforms to intuitive desktop applications.
+            Hello! I'm Isa Ahmad Khan, a Software Engineering student at Bilkent
+            University in Ankara. I am passionate about leveraging technology to
+            build tangible solutions, from complex data visualization platforms
+            to intuitive desktop applications.
           </p>
           <p>
             My experience spans both web and native development. At{' '}
@@ -479,128 +461,36 @@ const About = () => (
         </div>
       </div>
     </div>
-  </AnimatedSection>
+  </section>
 );
 
-const Projects = () => (
-  <AnimatedSection>
+const ProjectsSection = () => (
+  <section id="projects" className="page-section">
     <div className="page-container-large">
       <h2 className="page-title">My Work</h2>
       <div className="projects-grid">
-        {projectData.map((project) => (
-          <ProjectCard key={project.id} project={project} />
+        {projectData.map((project, index) => (
+          <ProjectCard key={project.id} project={project} index={index} />
         ))}
       </div>
     </div>
-  </AnimatedSection>
+  </section>
 );
 
-const ProjectDetail = () => {
-  const { projectId } = useParams();
-  const project = projectData.find((p) => p.id === projectId);
-
-  if (!project) {
-    return (
-      <AnimatedSection>
-        <div className="page-container text-center">
-          <h2 className="page-title">Project not found.</h2>
-          <Link to="/projects" className="back-link">
-            &larr; Back to Projects
-          </Link>
-        </div>
-      </AnimatedSection>
-    );
-  }
-
-  return (
-    <AnimatedSection>
-      <ScrollToTop />
-      <div className="page-container">
-        <Link to="/projects" className="back-link">
-          &larr; Back to All Projects
-        </Link>
-
-        <h2 className="project-detail-title">{project.title}</h2>
-        <div className="project-detail-meta">
-          <span>{project.role}</span>
-          <span className="separator">|</span>
-          <span>{project.timeline}</span>
-        </div>
-
-        <img
-          src={project.imageUrl.replace('600x400', '1200x600')}
-          alt={project.title}
-          className="project-detail-image"
-        />
-
-        <div className="project-detail-layout">
-          <div className="project-detail-main">
-            <div className="project-detail-section">
-              <h3 className="project-detail-subtitle">The Challenge</h3>
-              <p>{project.challenge}</p>
-            </div>
-
-            <div className="project-detail-section">
-              <h3 className="project-detail-subtitle">My Solution</h3>
-              {project.solution && (
-                <ul className="solution-list">
-                  {project.solution.map((item, index) => (
-                    <li key={index}>{item}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
-          <aside className="project-detail-sidebar">
-            <div className="sidebar-box">
-              <h4 className="sidebar-title">Technology Stack</h4>
-              <div className="project-card-tags">
-                {project.tags.map((tag) => (
-                  <span key={tag} className="project-card-tag">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <div className="sidebar-links">
-                {project.liveUrl && project.liveUrl !== '#' && (
-                  <a
-                    href={project.liveUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="button button-primary full-width"
-                  >
-                    Live Demo <ExternalLinkIcon />
-                  </a>
-                )}
-                {project.sourceUrl && project.sourceUrl !== '#' && (
-                  <a
-                    href={project.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="button button-secondary full-width"
-                  >
-                    Source Code <GithubIcon />
-                  </a>
-                )}
-              </div>
-            </div>
-          </aside>
-        </div>
-      </div>
-    </AnimatedSection>
-  );
-};
-
-const Skills = () => (
-  <AnimatedSection>
+const SkillsSection = () => (
+  <section id="skills" className="page-section">
     <div className="page-container">
       <h2 className="page-title">My Toolkit</h2>
       <div className="skills-container">
         <div className="skills-category">
           <h3 className="skills-subtitle">Technical Skills</h3>
           <div className="skills-list">
-            {skillsData.technical.map((skill) => (
-              <span key={skill} className="skill-tag-tech">
+            {skillsData.technical.map((skill, i) => (
+              <span
+                key={skill}
+                className="skill-tag-tech"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
                 {skill}
               </span>
             ))}
@@ -609,8 +499,12 @@ const Skills = () => (
         <div className="skills-category">
           <h3 className="skills-subtitle">Soft Skills</h3>
           <div className="skills-list">
-            {skillsData.soft.map((skill) => (
-              <span key={skill} className="skill-tag-soft">
+            {skillsData.soft.map((skill, i) => (
+              <span
+                key={skill}
+                className="skill-tag-soft"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
                 {skill}
               </span>
             ))}
@@ -619,8 +513,12 @@ const Skills = () => (
         <div className="skills-category">
           <h3 className="skills-subtitle">Languages</h3>
           <div className="skills-list">
-            {skillsData.languages.map((skill) => (
-              <span key={skill} className="skill-tag-soft">
+            {skillsData.languages.map((skill, i) => (
+              <span
+                key={skill}
+                className="skill-tag-soft"
+                style={{ animationDelay: `${i * 50}ms` }}
+              >
                 {skill}
               </span>
             ))}
@@ -628,12 +526,11 @@ const Skills = () => (
         </div>
       </div>
     </div>
-  </AnimatedSection>
+  </section>
 );
 
-const Contact = () => {
-  // Formspree form ID from Vite env (see .env.example)
-  const FORMSPREE_ID = import.meta.env.VITE_FORMSPREE_ID || '';
+const ContactSection = () => {
+  const FORMSPREE_ID = 'your-formspree-id'; // Replace with your Formspree form ID
   const [status, setStatus] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState('');
@@ -644,31 +541,25 @@ const Contact = () => {
     setError('');
     setIsSending(true);
     try {
-      if (!FORMSPREE_ID) {
-        throw new Error(
-          'Missing VITE_FORMSPREE_ID. Add it to your .env (see README).'
-        );
+      if (FORMSPREE_ID === 'your-formspree-id') {
+        throw new Error('Please replace "your-formspree-id" in the code.');
       }
       const form = e.currentTarget;
       const formData = new FormData(form);
-      // Optional: add a timestamp or metadata
-      formData.append('sentAt', new Date().toISOString());
-
       const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
         method: 'POST',
         body: formData,
         headers: { Accept: 'application/json' },
       });
-
       if (res.ok) {
         setStatus('Thanks! Your message has been sent.');
         form.reset();
       } else {
         const data = await res.json().catch(() => ({}));
-        const msg =
+        throw new Error(
           (data && (data.error || (data.errors && data.errors[0]?.message))) ||
-          'Something went wrong. Please try again.';
-        throw new Error(msg);
+            'Something went wrong.'
+        );
       }
     } catch (err) {
       setError(err.message || 'Failed to send.');
@@ -678,16 +569,14 @@ const Contact = () => {
   };
 
   return (
-    <AnimatedSection>
+    <section id="contact" className="page-section">
       <div className="page-container-small">
         <h2 className="page-title">Get In Touch</h2>
         <p className="contact-subtitle">
           I'm always open to discussing new projects, creative ideas, or
           opportunities.
         </p>
-
         <form onSubmit={handleSubmit} className="contact-form">
-          {/* Honeypot field to deter bots */}
           <input
             type="text"
             name="_gotcha"
@@ -695,15 +584,12 @@ const Contact = () => {
             tabIndex="-1"
             autoComplete="off"
           />
-
-          {/* Status messages */}
           <div className="form-status" aria-live="polite">
             {status && <span className="success-badge">{status}</span>}
           </div>
           <div className="form-status" aria-live="assertive">
             {error && <span className="error-badge">{error}</span>}
           </div>
-
           <div className="form-group">
             <label htmlFor="name" className="form-label">
               Name
@@ -716,7 +602,6 @@ const Contact = () => {
               className="form-input"
             />
           </div>
-
           <div className="form-group">
             <label htmlFor="email" className="form-label">
               Email
@@ -729,7 +614,6 @@ const Contact = () => {
               className="form-input"
             />
           </div>
-
           <div className="form-group">
             <label htmlFor="message" className="form-label">
               Message
@@ -742,7 +626,6 @@ const Contact = () => {
               className="form-input"
             ></textarea>
           </div>
-
           <div>
             <button
               type="submit"
@@ -754,24 +637,135 @@ const Contact = () => {
           </div>
         </form>
       </div>
-    </AnimatedSection>
+    </section>
   );
 };
 
-// --- Main App Component ---
+// --- PAGES & ROUTING ---
+
+const SinglePageLayout = () => (
+  <>
+    <Navbar isSinglePage={true} />
+    <main>
+      <HomeSection />
+      <AboutSection />
+      <ProjectsSection />
+      <SkillsSection />
+      <ContactSection />
+    </main>
+    <Footer />
+  </>
+);
+
+const ProjectDetailPage = () => {
+  const { projectId } = useParams();
+  const project = projectData.find((p) => p.id === projectId);
+
+  if (!project) {
+    return (
+      <div className="page-section">
+        <div className="page-container" style={{ textAlign: 'center' }}>
+          <h2 className="page-title">Project not found.</h2>
+          <Link to="/" className="back-link">
+            &larr; Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Navbar isSinglePage={false} />
+      <main className="main-content">
+        <section className="page-section">
+          <ScrollToTop />
+          <div className="page-container">
+            <Link to="/#projects" className="back-link">
+              &larr; Back to All Projects
+            </Link>
+            <h2 className="project-detail-title">{project.title}</h2>
+            <div className="project-detail-meta">
+              <span>{project.role}</span>
+              <span className="separator">|</span>
+              <span>{project.timeline}</span>
+            </div>
+            <img
+              src={project.imageUrl.replace('600x400', '1200x600')}
+              alt={project.title}
+              className="project-detail-image"
+            />
+            <div className="project-detail-layout">
+              <div className="project-detail-main">
+                <div className="project-detail-section">
+                  <h3 className="project-detail-subtitle">The Challenge</h3>
+                  <p>{project.challenge}</p>
+                </div>
+                <div className="project-detail-section">
+                  <h3 className="project-detail-subtitle">My Solution</h3>
+                  {project.solution && (
+                    <ul className="solution-list">
+                      {project.solution.map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+              <aside className="project-detail-sidebar">
+                <div className="sidebar-box">
+                  <h4 className="sidebar-title">Technology Stack</h4>
+                  <div className="project-card-tags">
+                    {project.tags.map((tag) => (
+                      <span key={tag} className="project-card-tag">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="sidebar-links">
+                    {project.liveUrl && project.liveUrl !== '#' && (
+                      <a
+                        href={project.liveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="button button-primary full-width"
+                      >
+                        Live Demo <ExternalLinkIcon />
+                      </a>
+                    )}
+                    {project.sourceUrl && project.sourceUrl !== '#' && (
+                      <a
+                        href={project.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="button button-secondary full-width"
+                      >
+                        Source Code <GithubIcon />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer />
+    </>
+  );
+};
+
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<AppLayout />}>
-          <Route index element={<Home />} />
-          <Route path="about" element={<About />} />
-          <Route path="projects" element={<Projects />} />
-          <Route path="projects/:projectId" element={<ProjectDetail />} />
-          <Route path="skills" element={<Skills />} />
-          <Route path="contact" element={<Contact />} />
-        </Route>
-      </Routes>
+      <div className="app-layout">
+        <ScrollProgressBar />
+        <div className="background-gradient"></div>
+        <Routes>
+          <Route path="/" element={<SinglePageLayout />} />
+          <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }
