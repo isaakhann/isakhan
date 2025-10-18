@@ -38,7 +38,7 @@ const projectData = [
       'A custom web portal for Bilkent University that uses a smart scheduling system to manage booking requests.',
     tags: ['ReactJS', 'Python', 'FastAPI'],
     imageUrl: 'https://placehold.co/600x400/0f172a/94a3b8?text=Bilformation',
-    role: 'Personal Project',
+    role: 'Group Project',
     timeline: '2024',
     challenge:
       "Bilkent University's information office needed an efficient way to manage booking requests from high school counsellors and prioritize them effectively.",
@@ -48,7 +48,7 @@ const projectData = [
       'The key feature is a "smart scheduling system" I implemented that prioritizes requests based on historical student data from different high schools.',
     ],
     liveUrl: '#',
-    sourceUrl: 'https://github.com/CS319-24-FA/S3-T6-Bilformationn', // Placeholder
+    sourceUrl: 'https://github.com/isaakhann/bilformation', // Placeholder
     isFeatured: true,
   },
   {
@@ -370,7 +370,7 @@ const ProjectCard = ({ project, index }) => (
         ))}
       </div>
       <Link to={`/projects/${project.id}`} className="project-card-link">
-        View Case Study <span>&rarr;</span>
+        <span>View Case Study &rarr;</span>
       </Link>
     </div>
   </div>
