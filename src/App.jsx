@@ -90,6 +90,28 @@ const projectData = [
     index: '04',
   },
   {
+    id: 'pitwall',
+    title: 'Project Pitwall',
+    subtitle: 'F1 Race Telemetry & ML Strategy Engine',
+    shortDescription: 'A real-time Formula 1 race control platform streaming live telemetry via WebSockets, with ML-powered pit stop predictions and an AI race strategy engineer.',
+    tags: ['ReactJS', 'FastAPI', 'Python', 'WebSockets', 'scikit-learn', 'Docker'],
+    imageUrl: 'https://placehold.co/600x400/0a0a0a/C8FF00?text=PITWALL',
+    role: 'Group Project',
+    timeline: '2025 – Present',
+    challenge: 'Formula 1 strategy decisions happen in split seconds during a race. Teams need real-time telemetry analysis, predictive pit stop windows, and live championship impact calculations — all streamed with minimal latency.',
+    solution: [
+      'Built a full-stack platform with a React dashboard consuming live WebSocket telemetry streams at 1Hz from a FastAPI backend.',
+      'Trained a Random Forest classifier on historical F1 data (via FastF1) to predict optimal pit stop windows based on tyre degradation, track temperature, and race position.',
+      'Implemented live F1 2025 championship standings calculations with real-time points recalculation as positions change.',
+      'Created a RAG-powered AI Race Strategy Engineer chat endpoint that aggregates live telemetry, standings, and ML predictions as context.',
+      'Containerized the full stack (frontend, backend, ML) with Docker Compose for reproducible deployment.',
+    ],
+    liveUrl: null,
+    sourceUrl: 'https://github.com/isaakhann/project-pitwall',
+    isFeatured: true,
+    index: '05',
+  },
+  {
     id: 'HelpAi',
     title: 'HelpAI',
     subtitle: 'AI-Powered Helping System',
@@ -103,7 +125,7 @@ const projectData = [
       'A low-latency AI assistant utilizing OCR and Speech-to-Text to monitor live on-screen content and audio, feeding data into open-source LLMs for instant, context-aware suggestions.',
     ],
     isFeatured: true,
-    index: '05',
+    index: '06',
   },
   {
     id: 'hospital-management',
@@ -113,7 +135,7 @@ const projectData = [
     tags: ['C++', 'Data Structures', 'Algorithms'],
     imageUrl: 'https://placehold.co/600x400/0a0a0a/C8FF00?text=HOSPITAL',
     isFeatured: false,
-    index: '06',
+    index: '07',
   },
   {
     id: 'pet-sphere',
@@ -123,7 +145,7 @@ const projectData = [
     tags: ['Java', 'JavaFX', 'Desktop App'],
     imageUrl: 'https://placehold.co/600x400/0a0a0a/C8FF00?text=PETSPHERE',
     isFeatured: false,
-    index: '07',
+    index: '08',
   },
   {
     id: 'space-invaders',
@@ -133,7 +155,7 @@ const projectData = [
     tags: ['Java', 'LibGDX', 'Game Dev'],
     imageUrl: 'https://placehold.co/600x400/0a0a0a/C8FF00?text=SPACE+INVADERS',
     isFeatured: false,
-    index: '08',
+    index: '09',
   },
   {
     id: 'chord-craft',
@@ -151,7 +173,7 @@ const projectData = [
       'Added a mood-selector mapping emotional states to musical characteristics like tempo and mode.',
     ],
     isFeatured: false,
-    index: '09',
+    index: '10',
   },
   {
     id: 'lens-log',
@@ -163,7 +185,7 @@ const projectData = [
     role: 'Personal Project',
     timeline: 'Winter 2024',
     isFeatured: false,
-    index: '10',
+    index: '11',
   },
 ];
 
@@ -608,6 +630,38 @@ const ProjectRow = ({ project, idx }) => {
   );
 };
 
+// --- PROJECT CARD (Featured) ---
+const ProjectCard = ({ project, idx }) => {
+  const [ref, inView] = useInView();
+  return (
+    <Link
+      to={`/projects/${project.id}`}
+      ref={ref}
+      className={`proj-card ${inView ? 'in-view' : ''}`}
+      style={{ transitionDelay: `${idx * 80}ms` }}
+    >
+      <div className="proj-card-img-wrap">
+        <img src={project.imageUrl} alt={project.title} className="proj-card-img" />
+        <div className="proj-card-overlay" />
+      </div>
+      <div className="proj-card-body">
+        <div className="proj-card-head">
+          <span className="proj-num">{project.index}</span>
+          <span className="proj-card-subtitle">{project.subtitle}</span>
+        </div>
+        <h3 className="proj-card-title">{project.title}</h3>
+        <p className="proj-card-desc">{project.shortDescription}</p>
+        <div className="proj-card-footer">
+          <div className="proj-tags">
+            {project.tags.slice(0, 3).map(t => <span key={t} className="proj-tag">{t}</span>)}
+          </div>
+          <span className="proj-card-arrow"><ArrowUpRight size={18} /></span>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
 // --- PROJECTS SECTION ---
 const ProjectsSection = () => {
   const [filter, setFilter] = useState('All');
@@ -623,6 +677,9 @@ const ProjectsSection = () => {
     return true;
   });
 
+  const featured = filtered.filter(p => p.isFeatured);
+  const others = filtered.filter(p => !p.isFeatured);
+
   return (
     <section id="projects" className="page-section" ref={ref}>
       <div className={`container ${inView ? 'in-view' : ''}`}>
@@ -635,9 +692,21 @@ const ProjectsSection = () => {
             <button key={f} className={`filter-pill ${filter === f ? 'active' : ''}`} onClick={() => setFilter(f)}>{f}</button>
           ))}
         </div>
-        <div className="proj-list">
-          {filtered.map((p, i) => <ProjectRow key={p.id} project={p} idx={i} />)}
-        </div>
+
+        {featured.length > 0 && (
+          <div className="proj-cards-grid">
+            {featured.map((p, i) => <ProjectCard key={p.id} project={p} idx={i} />)}
+          </div>
+        )}
+
+        {others.length > 0 && (
+          <>
+            {featured.length > 0 && <p className="proj-others-label">OTHER PROJECTS</p>}
+            <div className="proj-list">
+              {others.map((p, i) => <ProjectRow key={p.id} project={p} idx={i} />)}
+            </div>
+          </>
+        )}
       </div>
     </section>
   );
